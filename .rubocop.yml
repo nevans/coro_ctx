@@ -1,0 +1,355 @@
+########################################################################
+# Initial configuration, AllCops, inherit_mode, etc                 {{{1
+########################################################################
+
+AllCops:
+  TargetRubyVersion: 3.1  # experimental code. use latest ruby, at least to start
+  NewCops: enable         # I like to enable/disable when upgrading
+  Exclude:
+    - bin/rake
+    - bin/rspec
+    - bin/rubocop
+
+require:
+  - rubocop-rspec
+  - rubocop-rake
+
+inherit_mode:
+  merge:
+    - Exclude
+    - AllowedMethods
+    - AllowedPatterns
+
+# I'm (usually) strict about this.  I read & write code on my phone, I want
+# side-by-side on my desktop, and it's almost always easier to read.
+Layout/LineLength:
+  Max: 80
+  AllowedPatterns: # use for generated code/comments
+
+################################################################### }}}1
+########################################################################
+# Lint: be very careful about disabling Lint rules.                 {{{1
+# Also, this *mostly* follows the standard.rb gem's Lint config.
+########################################################################
+Lint/AmbiguousBlockAssociation:   { Enabled: false } # parenthesis are clutter
+Lint/AmbiguousOperatorPrecedence: { Enabled: false } # I wish this one could be customized...
+Lint/AmbiguousRange:              { Enabled: false } # know this: ranges are LOW precedence.
+Lint/DuplicateBranch:             { Enabled: false } # one-liner case,elsif
+Lint/EmptyClass:                  { Enabled: false }
+Lint/EmptyFile:                   { Enabled: false }
+Lint/EmptyInPattern:              { Enabled: false }
+Lint/HashCompareByIdentity:       { Enabled: false }
+Lint/HeredocMethodCallPosition:   { Enabled: false }
+Lint/ElseLayout:                  { Enabled: false } # misaligns one-liners
+Lint/UnusedBlockArgument:         { Enabled: false } # documentation
+Lint/UnusedMethodArgument:        { Enabled: false } # documentation
+
+Lint/ShadowedArgument:
+  IgnoreImplicitReferences: true
+
+Lint/UselessAccessModifier:
+  # TODO: these lists are incomplete...
+  ContextCreatingMethods:
+    - concerning
+  MethodCreatingMethods:
+    - delegate
+
+################################################################### }}}1
+########################################################################
+# Layout                                                           {{{1
+#######################################################################
+
+#######################################################################
+# Layout: Empty lines ...                                          {{{2
+#######################################################################
+
+# A few of these I want enabled sometimes and disabled others. ¯\_(ツ)_/¯
+Layout/EmptyLineAfterGuardClause:                 { Enabled: false }
+Layout/EmptyLineAfterMultilineCondition:          { Enabled: false }
+Layout/EmptyLinesAroundBlockBody:                 { Enabled: false }
+Layout/EmptyLinesAroundClassBody:                 { Enabled: false }
+Layout/EmptyLinesAroundModuleBody:                { Enabled: false }
+
+# A few of these I might disable the next time they annoy me. ¯\_(ツ)_/¯
+Layout/EmptyLineAfterMagicComment:                { Enabled: true }
+Layout/EmptyLines:                                { Enabled: true }
+Layout/EmptyLinesAroundAccessModifier:            { Enabled: true }
+Layout/EmptyLinesAroundArguments:                 { Enabled: true }
+Layout/EmptyLinesAroundBeginBody:                 { Enabled: true }
+Layout/EmptyLinesAroundExceptionHandlingKeywords: { Enabled: true }
+Layout/EmptyLinesAroundMethodBody:                { Enabled: true }
+
+Layout/EmptyLineBetweenDefs:
+  Enabled: true
+  AllowAdjacentOneLineDefs: true
+
+Layout/EmptyLinesAroundAttributeAccessor:
+  inherit_mode:
+    merge:
+      - AllowedMethods
+  Enabled: true
+  AllowedMethods:
+    - delegate
+    - def_delegator
+    - def_delegators
+    - def_instance_delegators
+
+#######################################################################
+# Layout: Alignment, indentation, and spacing                      {{{2
+#######################################################################
+
+Layout/FirstArgumentIndentation:
+  EnforcedStyle: consistent
+Layout/ArgumentAlignment:
+  # I want to allow both styles when the method is called without parentheses,
+  # but since I'm forced to choose only one... 🙁
+  EnforcedStyle: with_first_argument
+
+Layout/FirstArrayElementIndentation:
+  EnforcedStyle: consistent
+Layout/ArrayAlignment:
+  EnforcedStyle: with_first_element
+
+Layout/FirstHashElementIndentation:
+  EnforcedStyle: consistent
+  # EnforcedStyle: special_inside_parentheses
+Layout/HashAlignment:
+  EnforcedHashRocketStyle: table # some other rules check these values...
+  EnforcedColonStyle:      table #   ...and they don't understand the arrays 😦
+  # EnforcedHashRocketStyle: [table, key]
+  # EnforcedColonStyle:      [table, key]
+  EnforcedLastArgumentHashStyle: ignore_implicit
+  # Enabled: true # unfortunately this is still a bit broken... 😞
+  Enabled: false
+
+Layout/CommentIndentation:
+  AllowForAlignment: true
+
+Layout/MultilineOperationIndentation:  { EnforcedStyle: indented }
+Layout/MultilineMethodCallIndentation: { EnforcedStyle: indented }
+
+# if/when rubocop supports alignment better, then re-enable *some* of these
+Layout/SpaceAroundEqualsInParameterDefault: { Enabled: false }
+Layout/SpaceBeforeBlockBraces:              { Enabled: false }
+Layout/SpaceBeforeFirstArg:                 { Enabled: false }
+Layout/SpaceInLambdaLiteral:                { Enabled: false }
+Layout/SpaceInsideArrayLiteralBrackets:     { Enabled: false }
+Layout/SpaceInsideHashLiteralBraces:        { Enabled: false }
+
+# This needs to be configurable so parenthesis calls are aligned with first
+# parameter, and non-parenthesis calls are aligned with fixed indentation.
+Layout/ParameterAlignment: { Enabled: false }
+
+Layout/SpaceInsideBlockBraces:
+  EnforcedStyle: space
+  EnforcedStyleForEmptyBraces: space
+  SpaceBeforeBlockParameters: false
+
+Layout/LeadingCommentSpace:
+  AllowDoxygenCommentStyle: true
+
+# I would enable this if it were a bit better at handling alignment
+Layout/ExtraSpacing:
+  Enabled: false
+  AllowForAlignment:           true
+  AllowBeforeTrailingComments: true
+  ForceEqualSignAlignment:     true
+
+################################################################### }}}1
+########################################################################
+# Metrics                                                          {{{1
+# These are more guidelines than hard-and-fast rules.
+#
+# In general, aim to fit within the metrics, but expect more exceptions
+# for Metrics than for Lint, Layout, and Style.  Prefer to disable or
+# todo Metrics exceptions inline, not in yml config.
+#######################################################################
+
+# even lower is usually nicer, but reasonable exceptions are common
+Metrics/AbcSize:
+  Max: 20
+
+Metrics/ParameterLists:
+  CountKeywordArgs: false
+
+Metrics/BlockLength:
+  Exclude:
+    - 'spec/**/*_spec.rb'
+    - '*.gemspec'
+
+Metrics/ModuleLength:
+  Exclude:
+    - 'spec/**/*_spec.rb'
+    - '*.gemspec'
+
+################################################################### }}}1
+########################################################################
+# Naming                                                           {{{1
+#######################################################################
+
+Naming/BinaryOperatorParameterName:   { Enabled: false }
+Naming/RescuedExceptionsVariableName: { Enabled: false }
+
+Naming/VariableNumber:
+  CheckSymbols: false
+
+################################################################### }}}1
+########################################################################
+# Style                                                            {{{1
+#######################################################################
+
+Style/AccessorGrouping:        { Enabled: false }
+Style/EachWithObject:          { Enabled: false }
+Style/FetchEnvVar:             { Enabled: false }
+Style/IfUnlessModifier:        { Enabled: false }
+Style/Lambda:                  { Enabled: false }
+Style/LineEndConcatenation:    { Enabled: false }
+Style/MixinGrouping:           { Enabled: false }
+Style/ModuleFunction:          { Enabled: false }
+Style/MultilineBlockChain:     { Enabled: false }
+Style/RescueStandardError:     { Enabled: false }
+Style/SingleLineMethods:       { Enabled: false }
+Style/StabbyLambdaParentheses: { Enabled: false }
+Style/WhenThen:                { Enabled: false }
+
+# If rubocop had an option to only enforce this on constants and literals (e.g.
+# strings, regexp, range), I'd allow it.
+#
+# But if you are using it e.g. on method arguments of unknown type, in the same
+# style that ruby uses it with grep, then you are doing exactly the right thing.
+Style/CaseEquality: { Enabled: false }
+
+# There's *no* performance benefit to implicit vs explicit float coersion (I
+# benchmarked ruby 2.4.6). There's no need to enforce consistency here. Use
+# whichever version feels the most readable for your context.
+Style/FloatDivision: { Enabled: false }
+
+# Emoji are fine! 🤪 Use them just for fun. 😊
+# Rubocop 🚓👮🏻‍♂️  is always tryin'ta shut down 🚔 our fun! 🎉🥳🎊🥳🎉
+Style/AsciiComments: { Enabled: false }
+
+# this really isn't that important, but... double quotes are the correct way 😜
+Style/StringLiterals:
+  Enabled: true
+  EnforcedStyle: double_quotes
+Style/QuotedSymbols:
+  Enabled: true
+  EnforcedStyle: double_quotes
+Style/StringLiteralsInInterpolation:
+  Enabled: false
+  EnforcedStyle: double_quotes
+
+Style/SymbolArray:
+  MinSize: 3
+
+# "conservative" allows Pathname.new("foo") + "bar
+# also, "aggressive" mode cannot safely auto-correct.
+Style/StringConcatenation:
+  Mode: conservative
+
+# using tokens is nice, but... not using tokens is also nice, so who's to say?
+Style/FormatString:      { EnforcedStyle: percent }
+Style/FormatStringToken: { Enabled: false }
+
+# use these sparingly, but they're okay. not as cryptic as other perl globals.
+Style/PerlBackrefs: { Enabled: false }
+
+# I would enable this if rubocop understood a unary not (!) as *not* "complex"
+Style/TernaryParentheses:
+  EnforcedStyle: require_parentheses_when_complex
+  Enabled: false
+
+Style/ClassAndModuleChildren:
+  Exclude:
+    - "spec/**/*_spec.rb"
+    - "test/**/*"
+
+Style/Documentation:
+  Exclude:
+    - "app/controllers/**/*_controller.rb"
+    - "script/**/*"
+    - "spec/**/*_spec.rb"
+    - "test/**/*"
+    - "config/**/*"
+
+# This is a very nice check, but it uses an inaccurate method of determining
+# whether a method is procedural or functional. We can *mostly* compensate for
+# that by adding method names below.
+Style/BlockDelimiters:
+  EnforcedStyle: semantic
+  AllowBracesOnProceduralOneLiners: true
+  FunctionalMethods:
+    # probably logger
+    - debug
+    - info
+    - warn
+    - error
+    - fatal
+    - load_validation # site-prism
+    - to_h
+  ProceduralMethods:
+    - each
+    - open # File/IO
+    - pipelined # redis
+    - multi # redis
+    - add_periodic_timer # EM
+    - add_timer # EM
+    - mail # ActionMailer
+  AllowedMethods:
+    - silence # logger -- may or may not care about return value...
+    - expect
+    - expect_cohort_users
+    - its
+    - match
+    - specify
+    - subject  # always functional for rspec...
+    - subject! # always functional for rspec...
+    - async    # results are stored in completion, but is often preocedural
+    - defer    # results are stored in completion, but is often preocedural
+    - with_thread_queue # results are stored in completion... often preocedural
+    - redis   # our conn pool helper. may or may not care about return value.
+    - callback
+    - errback
+    - load
+    - build
+    - call # who knows?!
+
+# Keeping an empty method body for "documentation" is common in controllers.
+Style/EmptyMethod:
+  Exclude:
+    - 'app/controllers/**/*.rb'
+
+########################################################################
+# TODO ... misc styles                                              {{{2
+########################################################################
+
+# this is/was buggy... it catches big if/elsif/elsif/else statements
+# fixed in rubocop 1.5?
+Style/IfWithSemicolon:
+  Enabled: false
+
+Style/Semicolon:
+  # foo = 1; bar = 2  # <== this is fine
+  AllowAsExpressionSeparator: true
+
+Style/TrailingCommaInArguments:
+  EnforcedStyleForMultiline: consistent_comma
+  Enabled: false # consistent_comma is preferred but not enforced
+
+Style/TrailingCommaInHashLiteral:
+  EnforcedStyleForMultiline: consistent_comma
+  Enabled: false # consistent_comma is preferred but not enforced
+
+Style/TrailingCommaInArrayLiteral:
+  EnforcedStyleForMultiline: consistent_comma
+  Enabled: false # consistent_comma is preferred but not enforced
+
+Style/NumericLiterals:
+  MinDigits: 8
+
+################################################################### }}}1
+########################################################################
+
+########################################################################
+# TODO Performance, move to personal style gem                      {{{1
+# vim: foldmethod=marker
