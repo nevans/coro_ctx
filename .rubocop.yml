@@ -273,8 +273,8 @@ Style/Documentation:
     - "config/**/*"
 
 # This is a very nice check, but it uses an inaccurate method of determining
-# whether a method is procedural or functional. We can *mostly* compensate for
-# that by adding method names below.
+# whether a method is procedural or functional.  We can *mostly* compensate for
+# that by adding method names below.  rbs + typeprof might work better?
 Style/BlockDelimiters:
   EnforcedStyle: semantic
   AllowBracesOnProceduralOneLiners: true
@@ -297,6 +297,7 @@ Style/BlockDelimiters:
     - mail # ActionMailer
   AllowedMethods:
     - silence # logger -- may or may not care about return value...
+    - new     # some classes use new for side effects, and some for return value
     - expect
     - expect_cohort_users
     - its
