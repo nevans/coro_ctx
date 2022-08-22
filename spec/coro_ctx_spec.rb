@@ -59,9 +59,42 @@ RSpec.describe CoroCtx do
 
   # rubocop:enable Metrics/AbcSize
 
-  it "is inherited by enumerator fibers"
-  it "is inherited by new fibers"
-  it "is inherited by new threads"
+  it "is inherited by new fibers" do
+    fiber = nil
+    with_ctx_values b: "inheriting :b" do
+      fiber = Fiber.new do
+        Fiber.yield CoroCtx[:a]
+        Fiber.yield CoroCtx[:b]
+      end
+    end
+    expect(fiber.resume).to be_nil
+    expect(fiber.resume).to eq "inheriting :b"
+  end
+
+  # ...to ensure that this isn't only a monkeypatched Fiber.new, and will even
+  # work with code that uses the CAPI to create fibers.
+  it "is inherited by enumerator fibers" do
+    enum = Enumerator.new do |y|
+      y.yield CoroCtx[:a]
+      y.yield CoroCtx[:b]
+    end
+    with_ctx_values b: "inheriting :b" do
+      expect(enum.next).to be_nil
+      expect(enum.next).to eq "inheriting :b"
+    end
+  end
+
+  it "is inherited by new threads" do
+    q = Queue.new
+    with_ctx_values b: "inheriting :b" do
+      Thread.new do |y|
+        q << CoroCtx[:a]
+        q << CoroCtx[:b]
+      end
+    end
+    expect(q.pop).to be_nil
+    expect(q.pop).to eq "inheriting :b"
+  end
 
   context "when its elements aren't all ractor-sharable" do
     it "raises an exception for new ractors"
