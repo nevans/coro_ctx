@@ -5,7 +5,9 @@ module CoroCtx
   # enables CoroCtx inheritance by new Fibers. Threads, and Ractors.
   module Inheritance
 
-    # handles fibers created by CAPI
+    # To handle fibers created by the C API bypassing Fiber.new—e.g.
+    # implicit Enumerator fibers—we use a thread variable as backup and use
+    # +fiber_switch+ to synchronize with the fiber local variable.
     def self.fiber_switch_trace
       @fiber_switch_trace ||= TracePoint.new(:fiber_switch) do |tp|
         thr = Thread.current
@@ -13,8 +15,8 @@ module CoroCtx
           # This handles e.g. fibers that were suspended and resumed.
           thr.thread_variable_set(CURRENT_CTX_VAR_NAME, fvar)
         elsif (tvar = thr.thread_variable_get(CURRENT_CTX_VAR_NAME))
-          # This handles new fibers, including Enumerator fibers that are
-          # implicitly created.
+          # This handles fibers that were created bypassing Fiber.new, e.g.
+          # implicit Enumerator fibers.
           thr[CURRENT_CTX_VAR_NAME] = tvar
         end
       end
