@@ -97,13 +97,27 @@ RSpec.describe CoroCtx do
   end
 
   context "when its elements aren't all ractor-sharable" do
-    it "raises an exception for new ractors"
+    it "raises an exception for new ractors" do
+      with_ctx_values foo: Object.new do
+        expect { Ractor.new { :unreachable }.take }
+          .to raise_error(Ractor::Error)
+      end
+    end
   end
 
   context "when its elements are all ractor-sharable" do
-    it "is ractor sharable"
-    it "is inherited by new ractors"
+    it "is inherited by new ractors" do
+      with_ctx_values foo: :bar, hoge: :fuga do
+        r = Ractor.new do
+          Ractor.yield CoroCtx[:foo]
+          Ractor.yield CoroCtx[:hoge]
+        end
+        expect(r.take).to eq :bar
+        expect(r.take).to eq :fuga
+      end
+    end
   end
+
 end
 
 # rubocop:enable RSpec/DescribedClass, RSpec/MultipleExpectations

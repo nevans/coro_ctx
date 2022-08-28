@@ -7,6 +7,10 @@ require_relative "coro_ctx/version"
 #
 # TODO: documentation...
 module CoroCtx
+  autoload :Inheritance,     "#{__dir__}/coro_ctx/inheritance"
+  autoload :RactorDelegator, "#{__dir__}/coro_ctx/ractor_delegator"
+  autoload :RactorMediator,  "#{__dir__}/coro_ctx/ractor_mediator"
+
   class Error < StandardError; end
 
   CURRENT_CTX_VAR_NAME = :__CORO_CTX_CURRENT_CTX_VAR_NAME__
@@ -39,4 +43,4 @@ module CoroCtx
 
 end
 
-require_relative "coro_ctx/inheritance"
+CoroCtx::Inheritance.extend_core!
