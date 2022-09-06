@@ -16,6 +16,7 @@ module CoroCtx
           thr = Thread.current
           thr[CTX_VAR_NAME] ||=
             thr.thread_variable_get(CTX_VAR_NAME) ||
+            RactorMediator.initial_ctx ||
             EMPTY
         end
 
@@ -64,7 +65,7 @@ module CoroCtx
     # To handle fibers created by the C API bypassing Fiber.new—e.g.
     # implicit Enumerator fibers—we use a thread variable as backup and use
     # +fiber_switch+ to synchronize with the fiber local variable.
-    def self.fiber_switch_trace
+    def self.fiber_switch_trace # rubocop:disable Metrics
       Ractor.current[:coro_ctx_trace] ||= TracePoint.new(:fiber_switch) do |tp|
         thr = Thread.current
         if (fvar = thr[CTX_VAR_NAME])
@@ -74,6 +75,11 @@ module CoroCtx
           # This handles fibers that were created bypassing Fiber.new, e.g.
           # implicit Enumerator fibers.
           thr[CTX_VAR_NAME] = tvar
+        elsif Ractor.current.main?
+          Fiber.__current_coro_ctx__ = EMPTY
+          # TODO: how to start tracing on new ractors?
+        elsif (rvar = RactorMediator.initial_ctx)
+          Fiber.__current_coro_ctx__ = rvar
         end
       end
     end
