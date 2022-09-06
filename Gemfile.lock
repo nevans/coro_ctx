@@ -50,6 +50,7 @@ GEM
 
 PLATFORMS
   aarch64-linux-android
+  x86_64-linux
 
 DEPENDENCIES
   coro_ctx!
