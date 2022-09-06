@@ -211,6 +211,7 @@ Style/RescueStandardError:     { Enabled: false }
 Style/SingleLineMethods:       { Enabled: false }
 Style/StabbyLambdaParentheses: { Enabled: false }
 Style/WhenThen:                { Enabled: false }
+Style/YodaCondition:           { Enabled: false }
 
 # If rubocop had an option to only enforce this on constants and literals (e.g.
 # strings, regexp, range), I'd allow it.
@@ -314,6 +315,7 @@ Style/BlockDelimiters:
     - load
     - build
     - call # who knows?!
+    - trace # Tracepoint.trace
 
 # Keeping an empty method body for "documentation" is common in controllers.
 Style/EmptyMethod:
