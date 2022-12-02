@@ -12,10 +12,9 @@ module CoroCtx
 
   class Error < StandardError; end
 
-  EMPTY = {}.freeze
-  private_constant :EMPTY
-
   refine Kernel do
+    module_function
+
     def with_ctx_values(...) = Current.with_values(...)
   end
 

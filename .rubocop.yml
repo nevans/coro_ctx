@@ -213,6 +213,10 @@ Style/StabbyLambdaParentheses: { Enabled: false }
 Style/WhenThen:                { Enabled: false }
 Style/YodaCondition:           { Enabled: false }
 
+# This can be a good general guideline... but it's not worth sprinking "disable"
+# comments in all of the places where it just isn't a good fit.
+Style/GuardClause: { Enabled: false }
+
 # If rubocop had an option to only enforce this on constants and literals (e.g.
 # strings, regexp, range), I'd allow it.
 #
@@ -299,6 +303,7 @@ Style/BlockDelimiters:
   AllowedMethods:
     - silence # logger -- may or may not care about return value...
     - new     # some classes use new for side effects, and some for return value
+    - tap
     - expect
     - expect_cohort_users
     - its
