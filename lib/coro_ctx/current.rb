@@ -39,6 +39,8 @@ module CoroCtx
 
     # Because the tracepoint blocks are (or should be) ractor shareable, these
     # traces *should* automatically run in all ractors.
+    #
+    # (spoiler alert:                                              they don't.)
     module TraceFuncs # :nodoc:
       def self.enable = all_traces.map(&:enable)
 
