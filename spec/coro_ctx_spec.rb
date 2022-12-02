@@ -129,59 +129,61 @@ RSpec.describe CoroCtx do
     expect(ran).to eq 2
   end
 
-  context "when its elements aren't all ractor-sharable" do
-    it "raises an exception for new ractors" do
-      with_ctx_values foo: Object.new do
-        expect { Ractor.new { :unreachable }.take }
-          .to raise_error(Ractor::Error)
+  context "with multiple ractors" do
+    context "when its elements aren't all ractor-sharable" do
+      it "raises an exception for new ractors" do
+        with_ctx_values foo: Object.new do
+          expect { Ractor.new { :unreachable }.take }
+            .to raise_error(Ractor::Error)
+        end
       end
     end
-  end
 
-  context "when its elements are all ractor-sharable" do
-    it "is inherited by new ractors" do
-      with_ctx_values foo: :bar, hoge: :fuga do
-        r = Ractor.new do
-          Ractor.yield CoroCtx[:foo]
-          Ractor.yield Ractor.new { CoroCtx[:hoge] }.take
+    context "when its elements are all ractor-sharable" do
+      it "is inherited by new ractors" do
+        with_ctx_values foo: :bar, hoge: :fuga do
+          r = Ractor.new do
+            Ractor.yield CoroCtx[:foo]
+            Ractor.yield Ractor.new { CoroCtx[:hoge] }.take
+          end
+          expect(r.take).to eq :bar
+          expect(r.take).to eq :fuga
         end
-        expect(r.take).to eq :bar
-        expect(r.take).to eq :fuga
-      end
 
-      with_ctx_values foo: :bar, hoge: :fuga do
-        r = Ractor.new do
-          Ractor.yield CoroCtx[:foo]
-          Ractor.yield Ractor.new { CoroCtx[:hoge] }.take
+        with_ctx_values foo: :bar, hoge: :fuga do
+          r = Ractor.new do
+            Ractor.yield CoroCtx[:foo]
+            Ractor.yield Ractor.new { CoroCtx[:hoge] }.take
+          end
+          expect(r.take).to eq :bar
+          expect(r.take).to eq :fuga
         end
-        expect(r.take).to eq :bar
-        expect(r.take).to eq :fuga
-      end
 
-      f_r_t_e = with_ctx_values(a: "etc") {
-        with_ctx_values(a: :testing) {
-          Fiber.new do
-            Ractor.new do
-              Thread.new do
-                enum = Enumerator.new do |y|
-                  r2 = Ractor.new { with_ctx_values(a: :r2) { CoroCtx[:a] } }
-                  r3 = with_ctx_values(a: :r3) { Ractor.new { CoroCtx[:a] } }
-                  y.yield(Ractor.new { CoroCtx[:a] }.take)
-                  y.yield(Fiber.new { r2.take }.resume)
-                  y.yield(Enumerator.new { _1.yield r3.take }.next)
-                  y.yield(CoroCtx[:a])
-                end
-                e1 = with_ctx_values(a: :enum)     { enum.next }
-                e2 = with_ctx_values(a: :ignored1) { enum.next }
-                e3 = with_ctx_values(a: :ignored2) { enum.next }
-                e4 = with_ctx_values(a: :enum)     { enum.next }
-                {e1:, e2:, e3:, e4:}
-              end.value
-            end.take
-          end.resume
+        nested = with_ctx_values(a: "etc") {
+          with_ctx_values(a: :testing) {
+            Fiber.new do
+              Ractor.new do
+                Thread.new do
+                  enum = Enumerator.new do |y|
+                    r2 = Ractor.new { with_ctx_values(a: :r2) { CoroCtx[:a] } }
+                    r3 = with_ctx_values(a: :r3) { Ractor.new { CoroCtx[:a] } }
+                    y.yield(Ractor.new { CoroCtx[:a] }.take)
+                    y.yield(Fiber.new { r2.take }.resume)
+                    y.yield(Enumerator.new { _1.yield r3.take }.next)
+                    y.yield(CoroCtx[:a])
+                  end
+                  e1 = with_ctx_values(a: :enum)     { enum.next }
+                  e2 = with_ctx_values(a: :ignored1) { enum.next }
+                  e3 = with_ctx_values(a: :ignored2) { enum.next }
+                  e4 = with_ctx_values(a: :enum)     { enum.next }
+                  {e1:, e2:, e3:, e4:}
+                end.value
+              end.take
+            end.resume
+          }
         }
-      }
-      expect(f_r_t_e).to eq e1: :enum, e2: :r2, e3: :r3, e4: :enum
+        expect(nested).to eq e1: :enum, e2: :r2, e3: :r3, e4: :enum
+      end
     end
   end
 

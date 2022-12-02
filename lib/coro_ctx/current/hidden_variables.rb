@@ -26,6 +26,7 @@ module CoroCtx
         end
 
         def __synchronize_current_coro_ctx__!
+          # warn [Ractor.current, Thread.current, self, __method__].join(" ")
           thr = Thread.current
           if (fvar = thr[CTX_VAR_NAME])
             # This handles e.g. fibers that were suspended and resumed.
@@ -37,6 +38,16 @@ module CoroCtx
           elsif (rvar = RactorMediator.initial_ctx)
             Fiber.__current_coro_ctx__ = rvar
           end
+        end
+      end
+
+      refine Ractor.singleton_class do
+        def __init_current_coro_ctx__
+          # warn [Ractor.current, Thread.current, self, __method__].join(" ")
+        end
+
+        def __done_current_coro_ctx__
+          # warn [Ractor.current, Thread.current, self, __method__].join(" ")
         end
       end
 

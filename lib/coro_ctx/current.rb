@@ -37,6 +37,47 @@ module CoroCtx
       end
     end
 
+    # Because the tracepoint blocks are (or should be) ractor shareable, these
+    # traces *should* automatically run in all ractors.
+    module TraceFuncs # :nodoc:
+      def self.enable = all_traces.map(&:enable)
+
+      class << self
+        private
+
+        def all_traces = [fiber_switch, thread_begin, thread_end]
+
+        # To handle fibers created by the C API bypassing Fiber.new—e.g.
+        # implicit Enumerator fibers—we use a thread variable as backup and use
+        # +fiber_switch+ to synchronize with the fiber local variable.
+        def fiber_switch
+          @fiber_switch ||= TracePoint.new(
+            :fiber_switch,
+            &Ractor.make_shareable(->(_) {
+              Fiber.__synchronize_current_coro_ctx__!
+            })
+          )
+        end
+
+        # primarily used to detect new ractors
+        def thread_begin
+          @thread_begin ||= TracePoint.new(
+            :thread_begin,
+            &Ractor.make_shareable(->(_) { Ractor.__init_current_coro_ctx__ })
+          )
+        end
+
+        # primarily used to detect ractors ending
+        def thread_end
+          @thread_end ||= TracePoint.new(
+            :thread_end,
+            &Ractor.make_shareable(->(_) { Ractor.__done_current_coro_ctx__ })
+          )
+        end
+      end
+
+    end
+
     def self.[](...)   = Fiber.current_coro_ctx.[](...)
     def self.to_h(...) = Fiber.current_coro_ctx.to_h(...)
 
@@ -48,7 +89,7 @@ module CoroCtx
       # TODO: create new cancel ctx, call ractor_done, etc
       # TODO: how to re-establish tracepoint in new ractors?
       def extend_core!
-        fiber_switch_trace.enable
+        TraceFuncs.enable
         RactorMediator.start!
         RactorMediator.ping => :pong # sanity check
         Fiber.singleton_class.instance_exec  { prepend FiberNewInheritance }
@@ -56,19 +97,6 @@ module CoroCtx
         Ractor.singleton_class.instance_exec { prepend RactorNewInheritance }
       end
 
-      private
-
-      # To handle fibers created by the C API bypassing Fiber.new—e.g.
-      # implicit Enumerator fibers—we use a thread variable as backup and use
-      # +fiber_switch+ to synchronize with the fiber local variable.
-      #
-      # Because the tracepoint block should be ractor shareable, it should
-      # automatically run in all ractors.
-      def fiber_switch_trace
-        @fiber_switch_trace ||= TracePoint.new(:fiber_switch) do
-          Fiber.__synchronize_current_coro_ctx__!
-        end
-      end
     end
 
   end

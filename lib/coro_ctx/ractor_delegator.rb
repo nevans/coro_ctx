@@ -2,7 +2,10 @@
 
 module CoroCtx
 
-  # creates a ractor, instantiates an object in that ractor, and delegates calls
+  # n.b. this is part of the context inheritance proof-of-concept.  Its current
+  # form is unsuitable for production use.
+  #
+  # Creates a ractor, instantiates an object in that ractor, and delegates calls
   # to it.
   #
   # TODO... basic ractor signals:

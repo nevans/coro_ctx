@@ -2,8 +2,10 @@
 
 module CoroCtx
 
-  # An interface between different ractors, a registry of shared ctxs, and
-  # signals between them.
+  # n.b. this is part of the context inheritance proof-of-concept.  Its current
+  # form is unsuitable for production use.
+  #
+  # An a registry for passing signals between ractors and their shared contexts.
   #
   # Used to support:
   # * context inheritence
@@ -14,6 +16,7 @@ module CoroCtx
   #   * Context#result, Context#value, Context#error
   #
   # TODO: handling exits, links, monitors, parents, children all as signals
+  #
   class RactorMediator
     extend RactorDelegator::DelegatedClassMethods
 
